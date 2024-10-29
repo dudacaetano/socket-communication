@@ -1,6 +1,14 @@
 import pygame as p
 import util
 
+
+def evaluateBoard(grid, player):
+    score = 0
+    for y, row in enumerate(grid):
+        for x, col in enumerate(row):
+            score -= col
+    return score 
+
 #  Classes
 class Othello:
     def __init__(self):
@@ -17,6 +25,8 @@ class Othello:
 
         self.rows = 8
         self.columns = 8
+
+        self.gameOver = False
 
         self.grid = Grid(self.rows, self.columns, (80, 80), self)
 
@@ -38,25 +48,39 @@ class Othello:
                     self.grid.printGameLogicBoard()
                     
                 if event.button == 1:
-                    x,y = p.mouse.get_pos()
-                    x,y = (x - 80) // 80, (y - 80) // 80
-                    validCells = self.grid.findAvailMoves(self.grid.gridLogic, self.currentPlayer)
-                    if not validCells:
-                        pass
-                    else:
-                        if (y, x) in validCells:
-                            self.grid.insertToken(self.grid.gridLogic, self.currentPlayer, y, x)
-                            swappableTiles = self.grid.swappableTiles(y,x,self.grid.gridLogic,self.currentPlayer)
-                            for tile in swappableTiles:
-                                self.grid.animateTransitions(tile, self.currentPlayer)
-                                self.grid.gridLogic[tile[0]][tile[1]] *= -1 
-                            self.currentPlayer *= -1
-                            self.time = p.time.get_ticks()
+                    if not self.gameOver:
+                         x,y = p.mouse.get_pos()
+                         x,y = (x - 80) // 80, (y - 80) // 80
+                         validCells = self.grid.findAvailMoves(self.grid.gridLogic, self.currentPlayer)
+                         if not validCells:
+                            pass
+                         else:
+                            if (y, x) in validCells:
+                                self.grid.insertToken(self.grid.gridLogic, self.currentPlayer, y, x)
+                                swappableTiles = self.grid.swappableTiles(y,x,self.grid.gridLogic,self.currentPlayer)
+                                for tile in swappableTiles:
+                                    self.grid.animateTransitions(tile, self.currentPlayer)
+                                    self.grid.gridLogic[tile[0]][tile[1]] *= -1 
+                                self.currentPlayer *= -1
+                                self.time = p.time.get_ticks()
+                if self.gameOver:
+                    x, y = p.mouse.get_pos()
+                    if x >= 320 and x<= 480 and y>=400 and y<=480:
+                        self.grid.newGame()
+                        self.gameOver = False
                             
-                    
-
+                            
+                            
+                            
     def update(self):
-        pass
+        if not self.grid.findAvailMoves(self.grid.gridLogic, self.currentPlayer):
+            self.currentPlayer *= -1
+            
+
+            self.grid.player1Score =  self.grid.calculatePlayerScore(self.player1)
+            self.grid.player2Score =  self.grid.calculatePlayerScore(self.player2)
+            if not self.grid.findAvailMoves(self.grid.gridLogic, self.currentPlayer):
+                self.gameOver = True
 
     def draw(self):
         self.screen.fill((0, 0, 0))
@@ -79,6 +103,15 @@ class Grid:
 
         self.gridBg = self.createbgimg()
 
+        self.gridLogic = self.regenGrid(self.y, self.x)
+
+        self.player1Score = 0
+        self.player2Score = 0
+
+        self.font = p.font.SysFont('Arial', 20, True, False)
+    
+    def newGame(self):
+        self.tokens.clear()
         self.gridLogic = self.regenGrid(self.y, self.x)
 
     def loadBackGroundImages(self):
@@ -123,9 +156,36 @@ class Grid:
         self.insertToken(grid, 1, 4, 3)
 
         return grid
+    
+    def calculatePlayerScore(self, player):
+        score = 0
+        for row in self.gridLogic:
+            for col in row:
+                if col == player:
+                    score += 1 
+        return score
+    
+    def drawScore(self, player,score):
+        textImg =  self.font.render(f'{player} : {score}', 1, 'White')
+        return textImg
+    
+    def endScreen(self):
+        if self.GAME.gameOver:
+            endScreenImg = p.Surface((320,320))
+            endText = self.font.render(f'{"Congratulations, You Won!!" if self.player1Score > self.player2Score else "Bad Luck, You Lost"}', 1, 'White')
+            endScreenImg.blit(endText, (0,0))
+            newGame = p.draw.rect(endScreenImg, 'White', (80,160,160,80))
+            newGameText = self.font.render('Play Again', 1, 'Black')
+            endScreenImg.blit(newGameText, (120, 190))
+        return endScreenImg
+            
+
 
     def drawGrid(self, window):
         window.blit(self.gridBg, (0, 0))
+
+        window.blit(self.drawScore('White', self.player1Score), (900, 100))
+        window.blit(self.drawScore('Black', self.player2Score), (900,200))
         
         for token in self.tokens.values():
             token.draw(window)
@@ -135,6 +195,9 @@ class Grid:
         #if self.GAME.currentPlayer == 1: //show the validCells just for currentPlayer
         for move in availMoves:
             p.draw.rect(window, 'White', (80 + (move[1] * 80) +30, 80 + (move[0] * 80) + 30, 20, 20))
+        
+        if self.GAME.gameOver:
+            window.blit(self.endScreen(), (240,240))
         
 
     def printGameLogicBoard(self):

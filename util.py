@@ -30,9 +30,3 @@ def loadSpriteSheet(sheet, row, col, newSize, size):
     image.set_colorkey('Black')
     return image
 
-def evaluateBoard(grid, player):
-    score = 0
-    for y, row in enumerate(grid):
-        for x, col in enumerate(row):
-            score -= col
-    return score 
