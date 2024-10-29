@@ -44,9 +44,15 @@ class Othello:
                 self.RUN = False
 
             if event.type == p.MOUSEBUTTONDOWN:
+                x, y = p.mouse.get_pos()
+                if self.gameOver:
+                    if x >= 320 and x<= 480 and y>=400 and y<=480:
+                        self.grid.newGame()
+                        self.gameOver = False
+                        
                 if event.button == 3:
                     self.grid.printGameLogicBoard()
-                    
+
                 if event.button == 1:
                     if not self.gameOver:
                          x,y = p.mouse.get_pos()
@@ -57,30 +63,22 @@ class Othello:
                          else:
                             if (y, x) in validCells:
                                 self.grid.insertToken(self.grid.gridLogic, self.currentPlayer, y, x)
-                                swappableTiles = self.grid.swappableTiles(y,x,self.grid.gridLogic,self.currentPlayer)
+                                swappableTiles = self.grid.swappableTiles(y, x, self.grid.gridLogic, self.currentPlayer)
                                 for tile in swappableTiles:
                                     self.grid.animateTransitions(tile, self.currentPlayer)
                                     self.grid.gridLogic[tile[0]][tile[1]] *= -1 
                                 self.currentPlayer *= -1
-                                self.time = p.time.get_ticks()
-                if self.gameOver:
-                    x, y = p.mouse.get_pos()
-                    if x >= 320 and x<= 480 and y>=400 and y<=480:
-                        self.grid.newGame()
-                        self.gameOver = False
-                            
-                            
-                            
+                                self.time = p.time.get_ticks() 
+                    if self.gameOver:
+                        x, y = p.mouse.get_pos()                      
                             
     def update(self):
+        self.grid.player1Score =  self.grid.calculatePlayerScore(self.player1)
+        self.grid.player2Score =  self.grid.calculatePlayerScore(self.player2)
         if not self.grid.findAvailMoves(self.grid.gridLogic, self.currentPlayer):
-            self.currentPlayer *= -1
+            self.gameOver = True
+            return
             
-
-            self.grid.player1Score =  self.grid.calculatePlayerScore(self.player1)
-            self.grid.player2Score =  self.grid.calculatePlayerScore(self.player2)
-            if not self.grid.findAvailMoves(self.grid.gridLogic, self.currentPlayer):
-                self.gameOver = True
 
     def draw(self):
         self.screen.fill((0, 0, 0))
@@ -162,7 +160,7 @@ class Grid:
         for row in self.gridLogic:
             for col in row:
                 if col == player:
-                    score += 1 
+                    score += 1
         return score
     
     def drawScore(self, player,score):
@@ -184,8 +182,8 @@ class Grid:
     def drawGrid(self, window):
         window.blit(self.gridBg, (0, 0))
 
-        window.blit(self.drawScore('White', self.player1Score), (900, 100))
-        window.blit(self.drawScore('Black', self.player2Score), (900,200))
+        window.blit(self.drawScore('Black', self.player1Score), (900, 100))
+        window.blit(self.drawScore('White', self.player2Score), (900,200))
         
         for token in self.tokens.values():
             token.draw(window)
@@ -307,8 +305,7 @@ class Token:
     def transition(self, transitionImage, tokenImage):
         for i in range(30):
             self.image = transitionImage[i // 10]
-            if (i+1) % 10 == 0:
-                self.GAME.draw()
+            self.GAME.draw()
         self.image = tokenImage
         
     
