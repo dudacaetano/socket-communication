@@ -1,8 +1,6 @@
 import pygame as p
 import util
 
-
-
 #  Classes
 class Othello:
     def __init__(self):

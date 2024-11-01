@@ -1,24 +1,35 @@
 import socket
 import threading 
 
-HOST = "127.0.0.1"
+HOST = '127.0.0.1'
 PORT = 55557
 
-
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.connect((HOST, PORT))
+alias = input('Choose an alias:')
 
 
-    s.sendall(b"HELLO... \n")
-    full_msg = ''
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as c:
+    c.connect((HOST, PORT))
+
+
+def client_receive():
     while True:
-        data = s.recv(1024)
-        if len(data) <= 0:
+         try:
+            data = c.recv(1024).decode('utf-8')
+            if data == "alias?":
+                c.send(alias.encode('utf-8'))
+            else: 
+                print(data)
+         except:
+            print('ERRO!')
+            c.close()
             break
-        full_msg += data.decode("utf-8")
-    
+def client_send():
+    while True:
+        data = f'{alias}: {input("")}'
+        c.send(data.encode('utf-8'))
 
-print(full_msg)
-#print(data.decode("utf-8"))
+receive_thread =  threading.Thread(target=client_receive)
+receive_thread.start()
 
-#print(f"Received {data}")
+send_thread = threading.Thread(target=client_send)
+send_thread.start()
