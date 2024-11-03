@@ -1,14 +1,6 @@
 import pygame as p
 import util
 
-
-def evaluateBoard(grid, player):
-    score = 0
-    for y, row in enumerate(grid):
-        for x, col in enumerate(row):
-            score -= col
-    return score 
-
 #  Classes
 class Othello:
     def __init__(self):
