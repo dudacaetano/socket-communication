@@ -1,5 +1,5 @@
 import pygame as p
-import util
+import utilitys.util as util
 
 #  Classes
 class Othello:
