@@ -1,6 +1,9 @@
 import pygame as p
 import utilitys.util as util
 
+
+#<<<<<<<<<<<<<<<<<<<<<<<<<<< board and first implemeted of othello game >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 #  Classes
 class Othello:
     def __init__(self):
