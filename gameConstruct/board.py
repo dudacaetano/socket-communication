@@ -1,7 +1,7 @@
 import pygame as p  
 from utils.moveLogic import validMoves, loadImages ,getSprites
 from gameConstruct.Token import TokenConfig, Token
-
+from collections import Counter
 
 
 class othelloLogic:
@@ -111,6 +111,17 @@ class othelloLogic:
         return swappableTiles
     
     def calculatePlayerScore(self):
+        listBoard = [cell for row in self.boardLogic for cell in row]
+        counter = Counter(listBoard)
+        
+        whiteScore = counter[1]
+        blackScore = counter[-1]
+        emptyScore = counter[0]
+        
+        return(whiteScore, blackScore,emptyScore)
+        
+        
+        '''     
         whiteScore = 0
         blackScore = 0
         emptyScore = 0
@@ -120,6 +131,8 @@ class othelloLogic:
             blackScore += row.count(-1)
             emptyScore += row.count(0)
         return (whiteScore, blackScore, emptyScore)
+        '''
+
                     
             
     def clearBoardLogic(self):
@@ -150,6 +163,9 @@ class DrawGrid:
     def emptyGrid(self, rows, columns):
         board = [[0 for _ in range(columns)] for _ in range(rows)]
         return board
+        
+        
+        '''return np.zeros((rows, columns), dtype=int)'''
     
     def displayLogicBoard(self):
         """Prints the current logic board state."""
@@ -292,12 +308,11 @@ class DrawGrid:
         
     
     def calculatePlayerScore(self):
-        whiteScore = 0
-        blackScore = 0
-        emptyScore = 0
+        listBoard = [cell for row in self.boardLogic for cell in row]
+        counter = Counter(listBoard)
         
-        for row in self.boardLogic:
-            whiteScore += row.count(1)
-            blackScore += row.count(-1)
-            emptyScore += row.count(0)
-        return (whiteScore, blackScore, emptyScore)
+        whiteScore = counter[1]
+        blackScore = counter[-1]
+        emptyScore = counter[0]
+        
+        return(whiteScore, blackScore,emptyScore)
