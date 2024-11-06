@@ -25,12 +25,19 @@ class Client:
         
         self.INPUT_TEXT = ''
         self.FONT = p.font.SysFont('arial', 18)
+        self.chatBackground = p.image.load("assets/chatBackground.png")
+        self.chatBackground = p.transform.scale(self.chatBackground,(250, 500))
+        
+        self.inputBoxChat = p.image.load("assets/chatInputBackground.png")
+        self.inputBoxChat = p.transform.scale(self.inputBoxChat, (250, 30))
         self.chatLog = []
         
         self.whitePoints = 2
         self.whitePointsTxt = 'white'
         self.blackPoints = 2
         self.blackPointsTxt = 'black'
+        
+        
         
     def openConnect(self):
         try:
@@ -139,13 +146,47 @@ class Client:
         self.whitePoints, self.blackPoints, emptyScore = self.board.calculatePlayerScore()
         
  # <<<<<<<<<<<<<<<<<<<<<<< RENDER FUNCTIONS >>>>>>>>>>>>>>>>>>>>>>>   
-    def renderLabel(self, text,x,y, color=(250,250,250)):
-        drawImagetxt = self.FONT.render(text, True, color)
+    def renderLabel(self, text,x,y, color=(250,250,250), font=None):
+        fontToUse = font if font else self.FONT
+        drawImagetxt = fontToUse.render(text, True, color)
         self.gameDisplay.blit(drawImagetxt, (x,y))
         
     def renderBoxChat(self):
         
-        p.draw.rect(self.gameDisplay,(20,20,20), [800,200,250,500])
+        '''chatWidth = 250
+        chatHeight = 450
+        resizedChatBackground = p.transform.scale(self.chatBackground,(chatWidth, chatHeight))
+        self.gameDisplay.blit(resizedChatBackground, (800, 130))'''
+        
+        inputBoxWidth = 830
+        inputBoxHeight = 720
+        #resizedInputBoxChat = p.transform.scale(self.inputBoxChat,(inputBoxWidth, inputBoxHeight))
+        self.gameDisplay.blit(self.inputBoxChat,(inputBoxWidth,inputBoxHeight))
+        
+         
+        chatTitleFont = p.font.Font(None,36)       
+        self.renderLabel('chat', 830, 175, color=(255,255,0),font=chatTitleFont)
+        y = 670
+        
+        for type, content in reversed(self.chatLog[-14:]):
+            if type == 'r':
+                self.renderLabel(content, 805, y)
+            else:
+                self.renderLabel(content, 805, y, (30, 120, 30))
+            y -= 35
+            
+        textX = 840
+        textY = 725
+        
+        maxTextWidth = inputBoxWidth - 20
+        drawImageText = self.FONT.render(self.INPUT_TEXT, True, (250,250,250))
+        if drawImageText.get_width() > maxTextWidth:
+            while drawImageText.get_width > maxTextWidth:
+                self.INPUT_TEXT = self.INPUT_TEXT[:1]
+                drawImageText = self.FONT.render(self.INPUT_TEXT, True, (250,250,250))
+        
+        self.renderLabel(self.INPUT_TEXT, textX, textY)        
+        '''p.draw.rect(self.gameDisplay,(20,20,20), [800,200,250,500])
         p.draw.rect(self.gameDisplay,(20,20,20),[800,720,250,30])
         
         self.renderLabel('chat', 830, 175)
@@ -157,7 +198,7 @@ class Client:
             else: self.renderLabel(content, 805,y,(30,120,30))
             y -= 35
         
-        self.renderLabel(self.INPUT_TEXT, 805,725)
+        self.renderLabel(self.INPUT_TEXT, 805,725)'''
         
     def renderEndGame(self):
         if self.endGame:
