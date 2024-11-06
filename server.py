@@ -21,8 +21,6 @@ reserved for specific services)
 # create the socket
 # AF_INET == ipv4
 # SOCK_STREAM == TCP
-
-
 class Server:
     def __init__(self, HOST = '0.0.0.0', PORT=55557):
         self.HOST = HOST
@@ -30,18 +28,18 @@ class Server:
         
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind((HOST, PORT))
-        self.server.listen()
+        self.server.listen(2)
         
         self.clientWhite = None
         self.clientBlack = None 
         
-        self.board = othelloLogic(8,8)
+        self.board = othelloLogic(8, 8)
         self.gameTurn = -1
         self.endGame = False
         self.whitePoints = 2
         self.blackPoints = 2
         
-    def sendMessage(self, message, client):
+    def notifyMessage(self, message, client):
         if connect := self.clientWhite if client == 1 else self.clientBlack:
             try:
                 connect.send(json.dumps(message).encode())
@@ -51,28 +49,28 @@ class Server:
             except Exception as e:
                 print(f"Failed to send update to client {client}: {e}")
     
-    def sendConfig(self, client):
+    def notifyConfig(self, client):
         message = {
-            "type": NotificationType.END_GAME.value,
+            "type": NotificationType.CONFIG.value,
             "playerTurn": client,
             "board" : self.board.boardLogic,
             "gameTurn": -1}
-        self.sendMessage(message, client)
+        self.notifyMessage(message, client)
         
-    def sendEnfGame(self):
+    def notifyEndGame(self):
         message = {
-            "type": NotificationType.value,
+            "type": NotificationType.END_GAME.value,
         }
-        self.sendMessage(message, 1)
-        self.sendMessage(message, -1)
+        self.notifyMessage(message, 1)
+        self.notifyMessage(message, -1)
     
-    def sendRefresh(self):
+    def notifyRefresh(self):
         message = {
-            "type":NotificationType.value,
+            "type":NotificationType.REFRESH.value,
             "board": self.board.boardLogic,
             "gameTurn": self.gameTurn
         }
-        self.sendMessage(message, self.gameTurn)
+        self.notifyMessage(message, self.gameTurn)
     
     #<<<<<<<<<<<<<< FUNCTION OF EXECTIONS >>>>>>>>>>>>>>>>>
     
@@ -88,11 +86,11 @@ class Server:
                     self.board.boardLogic[tile[0]][tile[1]] *= -1
                 
                 self.gameTurn *= -1
-                self.sendRefresh()
+                self.notifyRefresh()
                 
                 if not self.board.findPlayableMoves(self.board.boardLogic, self.gameTurn):
                     self.endGame = True
-                    self.sendEnfGame()
+                    self.notifyEndGame()
                     
     def executeChat(self, message):
         content = message.get('content')
@@ -102,21 +100,21 @@ class Server:
             "type": NotificationType.CHAT.value,
             "content": content,
         }
-        self.sendMessage(message, client)
+        self.notifyMessage(message, client)
     
     def executeGiveup(self, client):
         message = {
             "type": NotificationType.GIVEUP.value
             
         }
-        self.sendMessage(message,client*-1)
+        self.notifyMessage(message,client*-1)
         
     def executeReset(self):
         self.board.clearBoardLogic()
         self.gameTurn = -1
         self.endGame = False
-        self.sendConfig(1)
-        self.sendConfig(-1)
+        self.notifyConfig(1)
+        self.notifyConfig(-1)
         
 # <<<<<<<<<<<<< HANDLER FUNCTIONS >>>>>>>>>>>>>>>>>>>>>>>
 
@@ -139,7 +137,7 @@ class Server:
             print("Unknown message type", message)
             
     def handleClient(self, connect, client):
-        self.sendConfig(client)
+        self.notifyConfig(client)
         
         try:
             while True: 
@@ -193,8 +191,3 @@ class Server:
 if __name__ == "__main__":
     server = Server()
     server.run()
- 
-                    
-         
-        
-        

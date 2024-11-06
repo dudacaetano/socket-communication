@@ -32,9 +32,9 @@ class Client:
         self.chatLog = []
         
         self.whitePoints = 2
-        self.whitePointsName = 'white'
+        self.whitePointsTxt = 'white'
         self.blackPoints = 2
-        self.blackPointsName = 'black'
+        self.blackPointsTxt = 'black'
         
     def openConnect(self):
         try:
@@ -48,14 +48,14 @@ class Client:
         self.connServer()
         self.openConnect()
         
-        threadListen = threading.Thread(target= self.messageListen)
+        threadListen = threading.Thread(target=self.messageListen)
         threadListen.daemon = True
         threadListen.start()
         
     
     def launchRun(self):
         clientHOST, clientPORT = self.socket.getsockname()
-        serverHOST, serverPORT = self.socket.getsockname()
+        serverHOST, serverPORT = self.socket.getpeername()
         p.display.set_caption(f" OthelloClient {clientHOST}:{clientPORT} connected to server {serverHOST}:{serverPORT}")
         while self.RUN == True: 
             self.input()
@@ -88,23 +88,23 @@ class Client:
                     x, y = p.mouse.get_pos()
                     
                     if self.endGame:
-                        if 800 <= x <= (800 + 250) and 130 <= y <= (130 + 30):
+                        if 800 <= x <= (800+250) and 130 <= y <= (130+30):
                             self.notifyReset()
                     else:
-                        if 800 <= x <= (800 + 250) and 130 <= y <= (130 + 30):
+                        if 800 <= x <= (800+250) and 130 <= y <= (130+30):
                             self.notifyGiveUp()
                             self.endGame = True 
                             
                             if self.playerTurn == 1:
-                                self.blackPointsName += 'YOU ARE THE WINNER!!!'
-                                self.whitePointsName += 'YOU LOST:('
+                                self.blackPointsTxt += ' YOU ARE THE WINNER!!! '
+                                self.whitePointsTxt += ' GAVEUP:( '
                                 
                             else:
-                                self.whitePointsName += 'YOU ARE THE WINNER!!!'
-                                self.blackPointsName += 'YOU LOST:('
+                                self.whitePointsTxt += ' YOU ARE THE WINNER!!! '
+                                self.blackPointsTxt += ' GAVEUP:( '
                                 
                         elif self.gameTurn == self.playerTurn:
-                            x,y = (x + 80) // 80 , (y - 80) // 80
+                            x, y = (x - 80) // 80 , (y - 80) // 80
                             
                             if validCells := self.board.findPlayableMoves(self.board.boardLogic, self.gameTurn):
                                 if(y, x) in validCells:
@@ -115,7 +115,7 @@ class Client:
                                         self.board.boardLogic[tile[0]][tile[1]] *= -1
                                         
                                     
-                                    self.notifyMove(x,y)
+                                    self.notifyAction(x,y)
                                     self.gameTurn *= -1
                                     self.executeScore()
         
@@ -129,7 +129,7 @@ class Client:
                 if boardLogic[y][x] != 0:
                     player= boardLogic[y][x]
                     
-                    self.board.insertToken(self.board.boardLogic, player, y,x)
+                    self.board.insertToken(self.board.boardLogic, player, y, x)
         
         self.gameTurn = gameTurn
         self.executeScore()
@@ -160,23 +160,22 @@ class Client:
         self.renderLabel(self.INPUT_TEXT, 805,725)
         
     def renderEndGame(self):
-        
         if self.endGame:
-            p.draw.rect(self.gameDisplay,(139,0,0),(800,130,250,30))
-            self.renderLabel('RESET', 885, 134, (0,0,0))
+            p.draw.rect(self.gameDisplay,(30,120,30),(800,130,250,30))
+            self.renderLabel('RESET', 885, 134, (0, 0, 0))
             
     def renderGiveUp(self):
         if not self.endGame:
-            p.draw.rect(self.gameDisplay, (139,0,0), (800,130,250,30))
+            p.draw.rect(self.gameDisplay, (139,0,0), (800, 130, 250, 30))
             self.renderLabel('GIVE UP', 885, 134)
     
     def draw(self):
-        self.gameDisplay.fill((0,0,0))
+        self.gameDisplay.fill((0, 0, 0))
         
         self.board.drawGrid(self.gameDisplay)
         
-        self.renderLabel(f'{self.whitePoints}: {self.whitePointsName}', 800,60)
-        self.renderLabel(f'{self.blackPoints}:{self.blackPointsName}', 800,95)
+        self.renderLabel(f'{self.whitePoints}: {self.whitePointsTxt}', 800,60)
+        self.renderLabel(f'{self.blackPoints}:{self.blackPointsTxt}', 800,95)
         
         self.renderBoxChat()
         
@@ -207,7 +206,7 @@ class Client:
             self.socket.close()
             
 # <<<<<<<<<<<<<<<<< SEND FUNCTIONS >>>>>>>>>>>>>>>>>>>>
-    def notifyMove(self, x,y):
+    def notifyAction(self, x,y):
         message = {
             "type": NotificationType.ACTION.value,
             "x": x,
@@ -251,16 +250,16 @@ class Client:
         self.playerTurn = playerTurn
         self.gameTurn = -1
         self.whitePoints = 2
-        self.whitePointsName = 'white'
+        self.whitePointsTxt = 'white'
         self.blackPoints = 2
-        self.blackPointsName = 'black'
+        self.blackPointsTxt = 'black'
         
         self.executeScore()
         
         if self.playerTurn == 1:
-            self.whitePointsName += '# <---'
+            self.whitePointsTxt += '# YOU'
         else: 
-            self.blackPointsName += '# <---'
+            self.blackPointsTxt += '# YOU'
         
         self.board.tokens.clear()
         boardLogic = message.get('board')
@@ -269,7 +268,7 @@ class Client:
         
     
     def executeUpdate(self, message):
-        boardLogic = message.get('content')
+        boardLogic = message.get('board')
         gameTurn = message.get('gameTurn')
         self.update(boardLogic, gameTurn)
         
@@ -281,27 +280,27 @@ class Client:
         self.endGame =True
         
         if self.whitePoints > self.blackPoints:
-            self.whitePointsName += 'YOU ARE THE WINNER!!!'
-            self.blackPointsName += 'YOU LOST:('
+            self.whitePointsTxt += ' YOU ARE THE WINNER!!! '
+            self.blackPointsTxt += ' YOU LOST:( '
         
         elif self.whitePoints < self.blackPoints:
-            self.blackPointsName += 'YOU ARE THE WINNER!!!'
-            self.whitePointsName += 'YOU LOST:('
+            self.blackPointsTxt += ' YOU ARE THE WINNER!!! '
+            self.whitePointsTxt += ' YOU LOST:( '
         
         else:
-            self.blackPointsName += 'DRAW'
-            self.whitePointsName += 'DRAW'
+            self.blackPointsTxt += ' DRAW '
+            self.whitePointsTxt += ' DRAW '
         
     def executeGiveUp(self):
         self.endGame = True
         
         if self.playerTurn == -1:
-            self.blackPointsName += 'YOU ARE THE WINNER!!!'
-            self.whitePointsName +=  'GAVEUP'
+            self.blackPointsTxt += ' YOU ARE THE WINNER!!! '
+            self.whitePointsTxt +=  ' GAVEUP '
         
         else: 
-            self.whitePointsName += 'WON'
-            self.blackPointsName += 'GAVEUP'
+            self.whitePointsTxt += ' WON'
+            self.blackPointsTxt += ' GAVEUP'
             
 #<<<<<<<<<<<<<<<<<< HANDLER FUNCTIONS >>>>>>>>>>>>>>>>>>
         

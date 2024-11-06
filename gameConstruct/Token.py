@@ -16,8 +16,8 @@ class Token(TokenConfig):
     def animateTransition(self, imagesTransition, imagesResult ):
         for i in range(30):
             self.image = imagesTransition[i // 10]
-            self.GAME.displayWindow()
+            self.GAME.draw()
         self.image = imagesResult
     
-    def displayWindow(self, window):
+    def draw(self, window):
         window.blit(self.image, (self.posX, self.posY))        

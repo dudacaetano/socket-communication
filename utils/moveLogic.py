@@ -1,5 +1,7 @@
+import pygame as p 
 
-import pygame as p
+#utility functions 
+
 
 def validMoves(x, y, minX = 0, minY=0, maxX=7, maxY=7):
     """
@@ -37,7 +39,7 @@ def validMoves(x, y, minX = 0, minY=0, maxX=7, maxY=7):
     if y > minY:
         moves.append((x, y - 1))
         
-    if y < minY:
+    if y < maxY:
         moves.append((x , y + 1 ))
         
     return moves 
@@ -46,10 +48,10 @@ def loadImages(path,size):
     image = p.image.load(path).convert_alpha()
     return p.transform.scale(image, size)
 
-def getSprites(sheet, row, col, size, spriteSize):
+def getSprites(sheet, row, columns, size, spriteSize):
     
-    sprite = p.Surface(spriteSize).convert_alpha()
-    sprite.blit(sheet, (0,0), (row * spriteSize[0], col * spriteSize[1], *spriteSize))
+    sprite = p.Surface((32, 32)).convert_alpha()
+    sprite.blit(sheet, (0, 0), (row * spriteSize[0], columns * spriteSize[1], spriteSize[0], spriteSize[1]))
     sprite = p.transform.scale(sprite, size)
     sprite.set_colorkey('Black')
     return sprite

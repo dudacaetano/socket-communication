@@ -3,6 +3,7 @@ from utils.moveLogic import validMoves, loadImages ,getSprites
 from gameConstruct.Token import TokenConfig, Token
 
 
+
 class othelloLogic:
     def __init__(self, rows, columns):
         self.grid_height = rows
@@ -12,13 +13,13 @@ class othelloLogic:
         self.boardLogic = self.emptyGrid(rows, columns)
         
     def emptyGrid(self, rows, columns):
-        matrix = [[0 for _ in range(columns)] for _ in range(rows)]
-        self.insertToken(matrix, 1 , 3 ,3)
-        self.insertToken(matrix, -1, 3 , 4)
-        self.insertToken(matrix, 1, 4, 4 )
-        self.insertToken(matrix, -1, 4 , 3)
+        board = [[0 for _ in range(columns)] for _ in range(rows)]
+        self.insertToken(board, 1 , 3 ,3)
+        self.insertToken(board, -1, 3 , 4)
+        self.insertToken(board, 1, 4, 4 )
+        self.insertToken(board, -1, 4 , 3)
         
-        return matrix
+        return board
         
     def displayLogicBoard(self):
         """Prints the current logic board state."""
@@ -30,53 +31,52 @@ class othelloLogic:
             print(line)
         print()
         
-    def insertToken(self, matrix, playerTurn, y, x):
-        self.tokens[(y,x)] = TokenConfig(playerTurn,y,x)
-        matrix[y][x] = self.tokens[(y,x)].player
+    def insertToken(self, board, playerTurn, y, x):
+        self.tokens[(y, x)] = TokenConfig(playerTurn, y, x)
+        board[y][x] = self.tokens[(y,x)].player
     
-    def findPlayableMoves(self, matrix, gameTurn):
-        validCells = self.findValidCells(matrix, gameTurn)
+    def findPlayableMoves(self, board, gameTurn):
+        validCells = self.findValidCells(board, gameTurn)
         playableCells = []
         
         for cell in validCells:
             x, y = cell
             if cell in playableCells:
                 continue
-            swappableTiles = self.fetchSwappableTiles(x,y, matrix, gameTurn)
+            swappableTiles = self.fetchSwappableTiles(x,y, board, gameTurn)
             
             if swappableTiles:
                 playableCells.append(cell)
                 
         return playableCells
     
-    def findValidCells(self, matrix, playerTurn):
+    def findValidCells(self, board, playerTurn):
         
         validCellToClick = []
         
-        for gridX, row in enumerate(matrix):
+        for gridX, row in enumerate(board):
             for gridY, col in enumerate(row):
-                if matrix[gridX][gridY] != 0:
+                if board[gridX][gridY] != 0:
                     continue
                 DIRECTIONS = validMoves(gridX, gridY)
-            
-            for direction in DIRECTIONS:
-                dirX, dirY = direction
-                checkedCell = matrix[dirX][dirY]
                 
-                if checkedCell == 0 or checkedCell == playerTurn:
-                    continue
+                for direction in DIRECTIONS:
+                    dirX, dirY = direction
+                    checkedCell = board[dirX][dirY]
                 
-                if (gridX, gridY) in validCellToClick:
-                    continue
+                    if checkedCell == 0 or checkedCell == playerTurn:
+                         continue
                 
-                validCellToClick.append((gridX, gridY))
+                    if (gridX, gridY) in validCellToClick:
+                         continue
                 
+                    validCellToClick.append((gridX, gridY))       
         return validCellToClick
         
     
-    def fetchSwappableTiles(self, x, y, matrix, player):
+    def fetchSwappableTiles(self, x, y, board, player):
         
-        surroundCells = validMoves(x,y)
+        surroundCells = validMoves(x, y)
         
         if not surroundCells:
             return []
@@ -85,16 +85,16 @@ class othelloLogic:
         
         for checkCell in surroundCells:
             checkX, checkY = checkCell
-            offsetX, offsetY = checkX, checkY
+            offsetX, offsetY = checkX - x, checkY - y
             currentLine = []
             
             
             while True: 
-                if matrix[checkX][checkY] == -player:
+                if board[checkX][checkY] == -player:
                     currentLine.append((checkX, checkY))
-                elif matrix[checkX][checkY] == player:
+                elif board[checkX][checkY] == player:
                     break
-                elif matrix[checkX][checkY] == 0:
+                elif board[checkX][checkY] == 0:
                     currentLine.clear()
                     break
                 
@@ -138,19 +138,18 @@ class DrawGrid:
         self.blacktoken = loadImages('assets/BlackToken.png', size)
         self.transitionWhiteToBlack = [loadImages(f'assets/BlackToWhite{i}.png', self.size) for i in range(1, 4)]
         self.transitionBlackToWhite = [loadImages(f'assets/WhiteToBlack{i}.png', self.size) for i in range(1, 4)]
-        
         self.background = self.loadBackGroundImages()
         
         self.tokens ={}
-        
+    
         self.gridBackgraundImage = self.createBackground()
         
         self.boardLogic = self.emptyGrid(rows, columns)
         
         
     def emptyGrid(self, rows, columns):
-        matrix = [[0 for _ in range(columns)] for _ in range(rows)]
-        return matrix
+        board = [[0 for _ in range(columns)] for _ in range(rows)]
+        return board
     
     def displayLogicBoard(self):
         """Prints the current logic board state."""
@@ -162,20 +161,20 @@ class DrawGrid:
             print(line)
         print()
         
-    def insertToken(self, matrix, playerTurn, y, x):
+    def insertToken(self, board, playerTurn, y, x):
         tokenImage = self.whitetoken if playerTurn == 1 else self.blacktoken
-        self.tokens[(y,x)] = Token(playerTurn,y,x, tokenImage, self.GAME)
-        matrix[y][x] = self.tokens[(y,x)].player
+        self.tokens[(y, x)] = Token(playerTurn, y, x, tokenImage, self.GAME)
+        board[y][x] = self.tokens[(y, x)].player
         
-    def findPlayableMoves(self, matrix, gameTurn):
-        validCells = self.findValidCells(matrix, gameTurn)
+    def findPlayableMoves(self, board, gameTurn):
+        validCells = self.findValidCells(board, gameTurn)
         playableCells = []
         
         for cell in validCells:
             x, y = cell
             if cell in playableCells:
                 continue
-            swappableTiles = self.fetchSwappableTiles(x,y, matrix, gameTurn)
+            swappableTiles = self.fetchSwappableTiles(x, y, board, gameTurn)
             
             if swappableTiles:
                 playableCells.append(cell)
@@ -183,33 +182,32 @@ class DrawGrid:
         return playableCells
     
     
-    def findValidCells(self, matrix, playerTurn):
+    def findValidCells(self, board, playerTurn):
         
         validCellToClick = []
         
-        for gridX, row in enumerate(matrix):
+        for gridX, row in enumerate(board):
             for gridY, col in enumerate(row):
-                if matrix[gridX][gridY] != 0:
+                if board[gridX][gridY] != 0:
                     continue
                 DIRECTIONS = validMoves(gridX, gridY)
-            
-            for direction in DIRECTIONS:
-                dirX, dirY = direction
-                checkedCell = matrix[dirX][dirY]
                 
-                if checkedCell == 0 or checkedCell == playerTurn:
-                    continue
+                for direction in DIRECTIONS:
+                    dirX, dirY = direction
+                    checkedCell = board[dirX][dirY]
                 
-                if (gridX, gridY) in validCellToClick:
-                    continue
+                    if checkedCell == 0 or checkedCell == playerTurn:
+                        continue
+                 
+                    if (gridX, gridY) in validCellToClick:
+                        continue
                 
-                validCellToClick.append((gridX, gridY))
-                
+                    validCellToClick.append((gridX, gridY))    
         return validCellToClick
     
-    def fetchSwappableTiles(self, x, y, matrix, player):
+    def fetchSwappableTiles(self, x, y, board, player):
         
-        surroundCells = validMoves(x,y)
+        surroundCells = validMoves(x, y)
         
         if not surroundCells:
             return []
@@ -218,16 +216,16 @@ class DrawGrid:
         
         for checkCell in surroundCells:
             checkX, checkY = checkCell
-            offsetX, offsetY = checkX, checkY
+            offsetX, offsetY = checkX - x , checkY - y
             currentLine = []
             
             
             while True: 
-                if matrix[checkX][checkY] == -player:
+                if board[checkX][checkY] == -player:
                     currentLine.append((checkX, checkY))
-                elif matrix[checkX][checkY] == player:
+                elif board[checkX][checkY] == player:
                     break
-                elif matrix[checkX][checkY] == 0:
+                elif board[checkX][checkY] == 0:
                     currentLine.clear()
                     break
                 
@@ -283,14 +281,14 @@ class DrawGrid:
         #if self.GAME.currentPlayer == 1: //show the validCells just for currentPlayer
         if self.GAME.gameTurn == self.GAME.playerTurn:
             for move in availMoves:
-                p.draw.rect(window, (240,240,240) if self.GAME.playerTurn == 1 else (50,50,50), (80 + (move[1] * 80) +30,80 +(move[0] *80) +30,20,20))
+                p.draw.rect(window, (240, 240, 240) if self.GAME.playerTurn == 1 else (50, 50, 50), (80 + (move[1] * 80) + 30, 80 +(move[0] * 80) + 30, 20, 20))
     
     
     def animateTransitions(self, cell, player):
         if player == 1:
-            self.tokens[(cell[0], cell[1])].animateTransition(self.transitionBlackToWhite, self.blacktoken)
-        else:
             self.tokens[(cell[0], cell[1])].animateTransition(self.transitionWhiteToBlack, self.whitetoken)
+        else:
+            self.tokens[(cell[0], cell[1])].animateTransition(self.transitionBlackToWhite, self.blacktoken)
         
     
     def calculatePlayerScore(self):
