@@ -86,6 +86,7 @@ class Client:
                 if event.button == 1:
                     x, y = p.mouse.get_pos()
                     
+                    #TODO-logic window endgame
                     if self.endGame:
                         if 800 <= x <= (800+250) and 130 <= y <= (130+30):
                             self.notifyReset()
@@ -171,6 +172,10 @@ class Client:
         '''if self.endGame:
             p.draw.rect(self.gameDisplay,(30,120,30),(800,130,250,30))
             self.renderLabel('RESET', 885, 134, (0, 0, 0))'''
+            
+    def renderEndGameWindow(self):
+        #TODO
+        pass
             
     def renderGiveUp(self):
         if not self.endGame:
@@ -316,6 +321,8 @@ class Client:
         else:
             self.blackPointsTxt += ' DRAW '
             self.whitePointsTxt += ' DRAW '
+        
+        self.renderEndGameWindow()
         
     def executeGiveUp(self):
         self.endGame = True
