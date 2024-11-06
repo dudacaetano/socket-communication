@@ -1,14 +1,10 @@
 import socket 
-import json 
+import msgpack as m
 import pygame as p  
 import threading
 
 from utils.notification import NotificationType
 from gameConstruct.board import DrawGrid
-
-#HOST = '127.0.0.1'
-#PORT = 55557
-
 
 class Client:
     def __init__(self, HOST = '0.0.0.0', PORT=55557):
@@ -39,9 +35,12 @@ class Client:
     def openConnect(self):
         try:
             self.socket.connect((self.HOST, self.PORT))
-            print("Connected")
+            print("Connected to the serve")
         except ConnectionRefusedError:
             print("Failed to connect to the server")
+            return
+        except Exception as e:
+            print(f"An error ocurred while connecting:{e}")
             return
     
     def run(self):
@@ -148,7 +147,7 @@ class Client:
         p.draw.rect(self.gameDisplay,(20,20,20), [800,200,250,500])
         p.draw.rect(self.gameDisplay,(20,20,20),[800,720,250,30])
         
-        self.renderLabel('chat', 800, 175)
+        self.renderLabel('chat', 830, 175)
         y = 670
         
         for type, content in reversed(self.chatLog[-14:]):
@@ -161,13 +160,33 @@ class Client:
         
     def renderEndGame(self):
         if self.endGame:
+            buttonX, buttonY = 830, 130
+            buttonWidth, buttonHeight = 250, 30
+            
+            resetButtonImage = p.image.load('assets/resetButton.png')
+            #resetButtonImage = p.transform.scale(resetButtonImage, (buttonWidth, buttonHeight))
+            
+            self.gameDisplay.blit(resetButtonImage, (buttonX, buttonY))
+        
+        '''if self.endGame:
             p.draw.rect(self.gameDisplay,(30,120,30),(800,130,250,30))
-            self.renderLabel('RESET', 885, 134, (0, 0, 0))
+            self.renderLabel('RESET', 885, 134, (0, 0, 0))'''
             
     def renderGiveUp(self):
         if not self.endGame:
+            
+            buttonX, buttonY = 830, 130
+            buttonWidth, buttonHeight = 250, 30
+            
+            resetButtonImage= p.image.load('assets/giveupButton.png')
+            resetButtonImage = p.image.load('assets/giveupButton.png')
+            
+            self.gameDisplay.blit(resetButtonImage, (buttonX, buttonY))
+        
+        
+        '''if not self.endGame:
             p.draw.rect(self.gameDisplay, (139,0,0), (800, 130, 250, 30))
-            self.renderLabel('GIVE UP', 885, 134)
+            self.renderLabel('GIVE UP', 885, 134)'''
     
     def draw(self):
         self.gameDisplay.fill((0, 0, 0))
@@ -191,15 +210,21 @@ class Client:
     def messageListen(self):
         try:
             while True: 
-                if _message := self.socket.recv(4096).decode():
+                # recebe dados em bytes
+                data = self.socket.recv(4096)
+                if data:
                     print()
-                    print(_message)
+                    print(f"Receive message: {data}")
                     
                     try:
-                        message = json.loads(_message)
+                        #desempacota os dados usando msgpack
+                        message = m.unpackb(data)
                         self.handleMessage(message)
-                    except json.JSONDecodeError:
-                        print("ERROR DECODING the JSON message")
+                    except m.exceptions.ExtraData:
+                         print("ERROR decoding the MessagePack message: Extra data encountered")
+                    except m.exceptions.UnpackException as e:
+                         print(f"ERROR unpacking MessagePack data: {e}")
+                         
         except ConnectionResetError:
             print("Connection lost with the server")
         finally:
@@ -213,8 +238,9 @@ class Client:
             "y": y
         }
         
-        jsonMessage = json.dumps(message)
-        self.socket.send(jsonMessage.encode())
+        packedMessage = m.packb(message)
+        self.socket.send(packedMessage)
+        
         
     def notifyChatMessage(self,content):
         message ={
@@ -222,23 +248,23 @@ class Client:
             "content": content,
             "player": self.playerTurn *-1
         }
-        jsonMessage = json.dumps(message)
-        self.socket.send(jsonMessage.encode())
+        packedMessage = m.packb(message)
+        self.socket.send(packedMessage)
     
     def notifyGiveUp(self):
         self.endGame = True
         message = {
             "type":NotificationType.GIVEUP.value,
         }
-        jsonMessage = json.dumps(message)
-        self.socket.send(jsonMessage.encode())
+        packedMessage = m.packb(message)
+        self.socket.send(packedMessage)
         
     def notifyReset(self):
         message = {
             "type": NotificationType.RESET.value,
         }
-        jsonMessage = json.dumps(message)
-        self.socket.send(jsonMessage.encode())
+        packedMessage = m.packb(message)
+        self.socket.send(packedMessage)
     
 #<<<<<<<<<<<<<<< EXECUTION FUNCTIONS >>>>>>>>>>>>>>>>>>>>>>>
     
@@ -250,9 +276,9 @@ class Client:
         self.playerTurn = playerTurn
         self.gameTurn = -1
         self.whitePoints = 2
-        self.whitePointsTxt = 'white'
+        self.whitePointsTxt = 'PLAYER-2'
         self.blackPoints = 2
-        self.blackPointsTxt = 'black'
+        self.blackPointsTxt = 'PLAYER-1'
         
         self.executeScore()
         
@@ -339,4 +365,8 @@ if __name__ == "__main__":
     client.run()
     client.launchRun()
         
+        
+        
+        
     
+        

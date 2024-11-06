@@ -1,7 +1,8 @@
 
 import socket 
 import threading
-import json
+import msgpack as m
+import os
 
 from utils.connectLAN import connectLAN
 from utils.notification import NotificationType
@@ -39,10 +40,14 @@ class Server:
         self.whitePoints = 2
         self.blackPoints = 2
         
+    
+        
     def notifyMessage(self, message, client):
         if connect := self.clientWhite if client == 1 else self.clientBlack:
             try:
-                connect.send(json.dumps(message).encode())
+                #serializa a message 
+                packedMessage = m.packb(message)
+                connect.send(packedMessage)  # já envia em bytes sem precisar converter
             except (BrokenPipeError, ConnectionResetError):
                 print(f"Connection error with client {client}. Removing client")
             
@@ -141,14 +146,15 @@ class Server:
         
         try:
             while True: 
-                data = connect.recv(1024).decode()
+                data = connect.recv(1024)
                 if data:
                     print(f'{client}:{data}')
                     try:
-                        message = json.loads(data)
+                        
+                        message = m.unpackb(data)
                         self.handleMessage(connect, message, client)
-                    except json.JSONDecodeError:
-                        print("ERROR decoding the JSON message")
+                    except m.exceptions.ExtraData:
+                        print("ERROR decoding the MessagePack message")
         except(ConnectionResetError, BrokenPipeError):
             print(f"Client {client} disconnected")
             self.disconnClient(client)

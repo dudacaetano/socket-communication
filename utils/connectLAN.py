@@ -1,4 +1,6 @@
 import socket
+import os
+
 
 #SOCK_DGRAM:cria um socket de datagrama (usando o protocolo UDP), que é sem conexão. 
 #Isso significa que não há estabelecimento de conexão completo entre cliente e servidor 
@@ -11,15 +13,32 @@ interface de rede e retorne o IP local.
 Como SOCK_DGRAM não exige conexão contínua,
 ele torna a operação mais rápida e simples.
 '''
+
+
 def connectLAN():
-    connectSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    connectSocket.settimeout(0)
     try:
-        # Attempt to connect to any IP address (it doesn't matter which)
-        connectSocket.connect(('10.254.254.254', 1))
-        ipLocal = connectSocket.getsockname()[0]  # Returns the local IP
+        #tentar obter o IP da váriavel de ambiente, caso contrario, usa a funcao de obter o ip local
+        ipLocal =  os.getenv("LAN_IP", socket.gethostbyname(socket.gethostname()))
     except Exception:
-        ipLocal = '127.0.0.1'  # Fallback to localhost if it fails
-    finally:
-        connectSocket.close()
+        ipLocal = '127.0.0.1'  # Fallback para localhost se falhar
     return ipLocal
+    
+   
+   
+   
+    
+"""
+     try:
+        ipLocal = socket.gethostbyname(socket.gethostname())
+    except Exception:
+        ipLocal = '127.0.0.1'  # Fallback para localhost se falhar
+    return ipLocal
+"""
+
+
+
+
+
+
+
+
