@@ -1,5 +1,8 @@
 import pygame as p
-import util
+import utilitys.util as util
+
+
+#<<<<<<<<<<<<<<<<<<<<<<<<<<< board and first implemeted of othello game >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 #  Classes
 class Othello:
