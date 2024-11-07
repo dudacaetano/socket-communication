@@ -3,6 +3,7 @@ import msgpack as m
 import pygame as p  
 import threading
 
+from datetime import datetime
 from utils.notification import NotificationType
 from gameConstruct.board import DrawGrid
 
@@ -186,19 +187,7 @@ class Client:
                 drawImageText = self.FONT.render(self.INPUT_TEXT, True, (250,250,250))
         
         self.renderLabel(self.INPUT_TEXT, textX, textY)        
-        '''p.draw.rect(self.gameDisplay,(20,20,20), [800,200,250,500])
-        p.draw.rect(self.gameDisplay,(20,20,20),[800,720,250,30])
         
-        self.renderLabel('chat', 830, 175)
-        y = 670
-        
-        for type, content in reversed(self.chatLog[-14:]):
-            if type == 'r':
-                self.renderLabel(content, 805,y)
-            else: self.renderLabel(content, 805,y,(30,120,30))
-            y -= 35
-        
-        self.renderLabel(self.INPUT_TEXT, 805,725)'''
         
     def renderEndGame(self):
         if self.endGame:
@@ -210,9 +199,7 @@ class Client:
             
             self.gameDisplay.blit(resetButtonImage, (buttonX, buttonY))
         
-        '''if self.endGame:
-            p.draw.rect(self.gameDisplay,(30,120,30),(800,130,250,30))
-            self.renderLabel('RESET', 885, 134, (0, 0, 0))'''
+        
             
     def renderEndGameWindow(self):
         #TODO
@@ -228,11 +215,6 @@ class Client:
             resetButtonImage = p.image.load('assets/giveupButton.png')
             
             self.gameDisplay.blit(resetButtonImage, (buttonX, buttonY))
-        
-        
-        '''if not self.endGame:
-            p.draw.rect(self.gameDisplay, (139,0,0), (800, 130, 250, 30))
-            self.renderLabel('GIVE UP', 885, 134)'''
     
     def draw(self):
         self.gameDisplay.fill((0, 0, 0))
@@ -277,38 +259,37 @@ class Client:
             self.socket.close()
             
 # <<<<<<<<<<<<<<<<< SEND FUNCTIONS >>>>>>>>>>>>>>>>>>>>
+
+    def createMessage(self, messageType, **keyarg):
+        #cria uma mensagem com o tipo e parametros passados 
+        message = {"type": messageType}
+        message.update(keyarg)
+        return message 
+    
     def notifyAction(self, x,y):
-        message = {
-            "type": NotificationType.ACTION.value,
-            "x": x,
-            "y": y
-        }
         
+        message = self.createMessage(NotificationType.ACTION.value, x=x, y=y)
         packedMessage = m.packb(message)
         self.socket.send(packedMessage)
         
         
     def notifyChatMessage(self,content):
-        message ={
-            "type": NotificationType.CHAT.value,
-            "content": content,
-            "player": self.playerTurn *-1
-        }
+        message = self.createMessage(
+            NotificationType.CHAT.value, 
+            content=content, 
+            player=self.playerTurn * -1)
+        
         packedMessage = m.packb(message)
         self.socket.send(packedMessage)
     
     def notifyGiveUp(self):
-        self.endGame = True
-        message = {
-            "type":NotificationType.GIVEUP.value,
-        }
+        #self.endGame = True
+        message = self.createMessage(NotificationType.GIVEUP.value)
         packedMessage = m.packb(message)
         self.socket.send(packedMessage)
         
     def notifyReset(self):
-        message = {
-            "type": NotificationType.RESET.value,
-        }
+        message = self.createMessage(NotificationType.RESET.value)
         packedMessage = m.packb(message)
         self.socket.send(packedMessage)
     
@@ -343,30 +324,55 @@ class Client:
         boardLogic = message.get('board')
         gameTurn = message.get('gameTurn')
         self.update(boardLogic, gameTurn)
+    
+    '''def formatChatMessage(self, content, player):
+        currentTime = datetime.now().strftime("%H:%M")
+        
+        formattedMessage = f"[{currentTime}] Player{player}: {content}"
+        return formattedMessage'''
+     
+    def displayChatMessage(self, content, timestamp):
+        formattedMessage = f"[{timestamp}] {content}"
+        self.chatLog.append(['r',formattedMessage])    
         
     def executeChat(self, message):
         content = message.get('content')
-        self.chatLog.append(['r', content])
+        timestamp = message.get('timestamp')
+        
+        self.displayChatMessage(content, timestamp)
+        
+    '''content = message.get('content')
+        self.chatLog.append(['r', content])'''
         
     def executeEndGame(self):
-        self.endGame =True
+        self.endGame = True 
         
-        if self.whitePoints > self.blackPoints:
-            self.whitePointsTxt += ' YOU ARE THE WINNER!!! '
-            self.blackPointsTxt += ' YOU LOST:( '
+        resultsGame = {
+            1:('YOU ARE THE WINNER!!', 'YOU LOST:('),
+            -1:('YOU LOST:(','YOU ARE THE WINNER!!'),
+            0:('#RRR','#RRR')  
+        }
         
-        elif self.whitePoints < self.blackPoints:
-            self.blackPointsTxt += ' YOU ARE THE WINNER!!! '
-            self.whitePointsTxt += ' YOU LOST:( '
+        WINNER = 1 if self.whitePoints>self.blackPoints else(-1 if self.whitePoints < self.blackPoints else 0)
         
-        else:
-            self.blackPointsTxt += ' DRAW '
-            self.whitePointsTxt += ' DRAW '
+        self.whitePointsTxt += f'{resultsGame[WINNER][0]}'
+        self.blackPointsTxt += f'{resultsGame[WINNER][1]}'
         
         self.renderEndGameWindow()
         
+        
     def executeGiveUp(self):
         self.endGame = True
+        
+        resultsGame = {
+            -1:('YOU ARE THE WINNER!!', 'GAVEUP'),
+             1:('WON', 'GAVEUP')
+        }
+        self.whitePointsTxt += f'{resultsGame.get(self.playerTurn, ("",""))[0]}'
+        self.blackPointsTxt += f'{resultsGame.get(self.playerTurn,("",""))[1]}'
+        
+        
+        '''self.endGame = True
         
         if self.playerTurn == -1:
             self.blackPointsTxt += ' YOU ARE THE WINNER!!! '
@@ -375,6 +381,7 @@ class Client:
         else: 
             self.whitePointsTxt += ' WON'
             self.blackPointsTxt += ' GAVEUP'
+            '''
             
 #<<<<<<<<<<<<<<<<<< HANDLER FUNCTIONS >>>>>>>>>>>>>>>>>>
         

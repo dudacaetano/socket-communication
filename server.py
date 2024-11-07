@@ -4,9 +4,9 @@ import threading
 import msgpack as m
 import os
 
+from datetime import datetime
 from utils.connectLAN import connectLAN
 from utils.notification import NotificationType
-
 from gameConstruct.board import othelloLogic
 
 
@@ -22,15 +22,12 @@ reserved for specific services)
 # create the socket
 # AF_INET == ipv4
 # SOCK_STREAM == TCP
-class Server:
+class Server:    
     def __init__(self, HOST = '0.0.0.0', PORT=55557):
         self.HOST = HOST
         self.PORT = PORT
-        
-        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server.bind((HOST, PORT))
-        self.server.listen(2)
-        
+        self.initializeServeSocket()
+
         self.clientWhite = None
         self.clientBlack = None 
         
@@ -41,13 +38,29 @@ class Server:
         self.blackPoints = 2
         
     
+    def initializeServeSocket(self):
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.bind((self.HOST, self.PORT))
+        self.server.listen(2)
         
+    
+    #**keyarg: parametro especial usado para capturar um numero variavel de argumentos nomeados
+    '''def createMessage(self, messageType, **keyarg):
+        message = {"type": messageType}
+        message.update(keyarg)
+        return message'''
+        
+    def createMessage(self, messageType, **keyarg):
+        message = {"type":messageType}
+        message.update(keyarg)
+        return message
+    
     def notifyMessage(self, message, client):
         if connect := self.clientWhite if client == 1 else self.clientBlack:
             try:
                 #serializa a message 
                 packedMessage = m.packb(message)
-                connect.send(packedMessage)  # já envia em bytes sem precisar converter
+                connect.send(packedMessage) 
             except (BrokenPipeError, ConnectionResetError):
                 print(f"Connection error with client {client}. Removing client")
             
@@ -55,26 +68,28 @@ class Server:
                 print(f"Failed to send update to client {client}: {e}")
     
     def notifyConfig(self, client):
-        message = {
-            "type": NotificationType.CONFIG.value,
-            "playerTurn": client,
-            "board" : self.board.boardLogic,
-            "gameTurn": -1}
+        message = self.createMessage(
+            NotificationType.CONFIG.value,
+            playerTurn = client,
+            board = self.board.boardLogic,
+            gameTurn = -1
+        )
         self.notifyMessage(message, client)
         
     def notifyEndGame(self):
-        message = {
-            "type": NotificationType.END_GAME.value,
-        }
+        message = self.createMessage(
+            NotificationType.END_GAME.value,
+            
+        )
         self.notifyMessage(message, 1)
         self.notifyMessage(message, -1)
     
     def notifyRefresh(self):
-        message = {
-            "type":NotificationType.REFRESH.value,
-            "board": self.board.boardLogic,
-            "gameTurn": self.gameTurn
-        }
+        message = self.createMessage(
+            NotificationType.REFRESH.value,
+            board = self.board.boardLogic,
+            gameTurn = self.gameTurn
+        )
         self.notifyMessage(message, self.gameTurn)
     
     #<<<<<<<<<<<<<< FUNCTION OF EXECTIONS >>>>>>>>>>>>>>>>>
@@ -97,15 +112,39 @@ class Server:
                     self.endGame = True
                     self.notifyEndGame()
                     
+    '''def formatChatMessage(self, content, player):
+        return{
+            "type": NotificationType.CHAT.value,
+            "content":content,
+            "player": player
+        }'''
+        
+    def broadcastChatMessage(self, content, client):
+        
+        timestamp = datetime.now().strftime("%H:%M")
+        message = {
+            "type": NotificationType.CHAT.value,
+            "content": content,
+            "player": client,
+            "timestamp": timestamp
+        }
+        #self.notifyMessage(message, client)
+        #otherClient = 1 if client == -1 else -1
+        #self.notifyMessage(message, otherClient)
+        
+        if client == 1 and self.clientWhite:
+            self.notifyMessage(message, 1)
+        if client == -1 and self.clientBlack:
+            self.notifyMessage(message, -1)
+        
+                    
     def executeChat(self, message):
         content = message.get('content')
         client = message.get('player')
         
-        message = {
-            "type": NotificationType.CHAT.value,
-            "content": content,
-        }
-        self.notifyMessage(message, client)
+        
+        self.broadcastChatMessage(content, client)
+        
     
     def executeGiveup(self, client):
         message = {
@@ -144,6 +183,24 @@ class Server:
     def handleClient(self, connect, client):
         self.notifyConfig(client)
         
+        '''try:
+            while True: 
+                data =  connect.recv(1024)
+                if not data:
+                    break
+                print(f'{client}: {data}')
+                try:
+                    message = m.unpack(data)
+                    self.handleMessage(connect, message, client)
+                except m.exceptions.ExtraData:
+                    print("ERROR decoding the MessagePack message")
+        except (ConnectionResetError, BrokenPipeError):
+            print(f"Client {client} disconnected")
+            self.disconnClient(client)
+        finally:
+            connect.close()'''
+        
+        self.notifyConfig(client)
         try:
             while True: 
                 data = connect.recv(1024)
@@ -158,7 +215,6 @@ class Server:
         except(ConnectionResetError, BrokenPipeError):
             print(f"Client {client} disconnected")
             self.disconnClient(client)
-        
         finally:
             connect.close()
     

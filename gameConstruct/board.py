@@ -1,7 +1,9 @@
 import pygame as p  
+import numpy as np
 from utils.moveLogic import validMoves, loadImages ,getSprites
 from gameConstruct.Token import TokenConfig, Token
 from collections import Counter
+
 
 
 class othelloLogic:
@@ -119,19 +121,6 @@ class othelloLogic:
         emptyScore = counter[0]
         
         return(whiteScore, blackScore,emptyScore)
-        
-        
-        '''     
-        whiteScore = 0
-        blackScore = 0
-        emptyScore = 0
-        
-        for row in self.boardLogic:
-            whiteScore += row.count(1)
-            blackScore += row.count(-1)
-            emptyScore += row.count(0)
-        return (whiteScore, blackScore, emptyScore)
-        '''
 
                     
             
@@ -161,11 +150,9 @@ class DrawGrid:
         
         
     def emptyGrid(self, rows, columns):
-        board = [[0 for _ in range(columns)] for _ in range(rows)]
-        return board
-        
-        
-        '''return np.zeros((rows, columns), dtype=int)'''
+        '''board = [[0 for _ in range(columns)] for _ in range(rows)]
+        return board'''
+        return np.zeros((rows, columns), dtype=int)
     
     def displayLogicBoard(self):
         """Prints the current logic board state."""
