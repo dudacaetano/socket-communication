@@ -284,7 +284,8 @@ class DrawGrid:
         #if self.GAME.currentPlayer == 1: //show the validCells just for currentPlayer
         if self.GAME.gameTurn == self.GAME.playerTurn:
             for move in availMoves:
-                p.draw.rect(window, (240, 240, 240) if self.GAME.playerTurn == 1 else (50, 50, 50), (80 + (move[1] * 80) + 30, 80 +(move[0] * 80) + 30, 20, 20))
+               p.draw.rect(window, (0,255, 0), (80 +(move[1]*80) + 30, 80 +(move[0] * 80) + 30 ,20 ,20))
+               # p.draw.rect(window, (240, 240, 240) if self.GAME.playerTurn == 1 else (50, 50, 50), (80 + (move[1] * 80) + 30, 80 +(move[0] * 80) + 30, 20, 20))
     
     
     def animateTransitions(self, cell, player):

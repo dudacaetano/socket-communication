@@ -50,14 +50,19 @@ class Client:
         except Exception as e:
             print(f"An error ocurred while connecting:{e}")
             return
+        
+    def listenThread(self):
+        thread = threading.Thread(target=self.messageListen, daemon=True)
+        thread.start()
     
     def run(self):
         self.connServer()
         self.openConnect()
+        self.listenThread()
         
-        threadListen = threading.Thread(target=self.messageListen)
+        '''threadListen = threading.Thread(target=self.messageListen)
         threadListen.daemon = True
-        threadListen.start()
+        threadListen.start()'''
         
     
     def launchRun(self):
@@ -70,8 +75,78 @@ class Client:
             self.gameClock.tick(60)
             
     #<<<<<<<<<<<<<<<<<<<<<<<<<<< EVENT BUTTON >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    def quitEvent(self, event):
+        if event.type == p.QUIT:
+            self.notifyGiveUp()
+            self.RUN = False
+    
+    def textInput(self, event):
+        if event.type == p.TEXTINPUT:
+            if len(self.INPUT_TEXT) < 19:
+                self.INPUT_TEXT += event.text
+    
+    def keydownEvent(self, event):
+        if event.type == p.KEYDOWN:
+            if event.key == p.K_BACKSPACE:
+                self.INPUT_TEXT = self.INPUT_TEXT[:-1]
+            elif event.key == p.K_RETURN and self.INPUT_TEXT != '':
+                self.notifyChatMessage(self.INPUT_TEXT)
+                self.chatLog.append(["s", self.INPUT_TEXT])
+                self.INPUT_TEXT = ''
+                
+    def mouseButtonEvent(self, event):
+        if event.type == p.MOUSEBUTTONDOWN and event.button == 1:
+            x, y = p.mouse.get_pos()
+            if self.endGame:
+                self.endGameMouseClick(x, y)
+            else:
+                self.gameMouseClick(x, y)
+    def endGameMouseClick(self, x, y):
+        if 800 <= x <= (800 + 250) and 130 <= y <= (130 + 30):
+            self.notifyReset()
+            
+    def gameMouseClick(self, x, y):
+        if 800 <= x <= (800 + 250) and 130 <= y <= (130 + 30):
+            self.notifyGiveUp()
+            self.endGame = True
+            self.updateScoreGiveup()
+        elif self.gameTurn == self.playerTurn:
+            self.gameMove(x, y)
+    
+    def updateScoreGiveup(self):
+        if self.playerTurn == 1:
+            self.blackPointsTxt += ' YOU ARE THE WINNER'
+            self.whitePointsTxt += ' GAVEUP :('
+        else:
+            self.whitePointsTxt += ' YOU ARE THE WINNER'
+            self.blackPointsTxt += ' GAVEUP'
+    
+    def gameMove(self, x, y):
+        x, y = (x - 80) // 80, (y - 80) // 80
+        if validCells := self.board.findPlayableMoves(self.board.boardLogic, self.gameTurn):
+            if (y, x) in validCells:
+                self.board.insertToken(self.board.boardLogic, self.gameTurn, y, x)
+                swappableTiles = self.board.fetchSwappableTiles(y, x, self.board.boardLogic, self.gameTurn)
+                for tile in swappableTiles:
+                    self.board.animateTransitions(tile, self.gameTurn)
+                    self.board.boardLogic[tile[0]][tile[1]] *= -1
+                self.notifyAction(x, y)
+                self.gameTurn *= -1
+                self.executeScore()
     
     def input(self):
+        eventHandler = {
+            p.QUIT: self.quitEvent,
+            p.TEXTINPUT: self.textInput,
+            p.KEYDOWN: self.keydownEvent,
+            p.MOUSEBUTTONDOWN: self.mouseButtonEvent
+        }
+        for event in p.event.get():
+            handler = eventHandler.get(event.type)
+            if handler:
+                handler(event)
+    
+    '''def input(self):
         for event in p.event.get():
             if event.type == p.QUIT:
                 self.notifyGiveUp()
@@ -125,7 +200,7 @@ class Client:
                                     
                                     self.notifyAction(x,y)
                                     self.gameTurn *= -1
-                                    self.executeScore()
+                                    self.executeScore()'''
         
     
     def update(self, boardLogic, gameTurn):
