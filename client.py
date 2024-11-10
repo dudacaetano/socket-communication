@@ -287,7 +287,7 @@ class Client:
             buttonWidth, buttonHeight = 250, 30
             
             resetButtonImage= p.image.load('assets/giveupButton.png')
-            resetButtonImage = p.image.load('assets/giveupButton.png')
+            #resetButtonImage = p.image.load('assets/giveupButton.png')
             
             self.gameDisplay.blit(resetButtonImage, (buttonX, buttonY))
     
