@@ -22,7 +22,7 @@ class othelloLogic:
         self.insertToken(board, -1, 4 , 3)
         
         return board
-        
+    # ATUALIZA: mostra o tabuleiro atualizado depois da jogada    
     def displayLogicBoard(self):
         """Prints the current logic board state."""
         print('  | A | B | C | D | E | F | G | H |')
@@ -51,7 +51,7 @@ class othelloLogic:
                 playableCells.append(cell)
                 
         return playableCells
-    
+    #REQUISITO : MOVIMENTAR AS PEÇAS NO TABULEIRO
     def findValidCells(self, board, playerTurn):
         
         validCellToClick = []
@@ -112,6 +112,8 @@ class othelloLogic:
         
         return swappableTiles
     
+    
+    #CONTROLE DE PONTUAÇÃO DOS JOGADORES
     def calculatePlayerScore(self):
         listBoard = [cell for row in self.boardLogic for cell in row]
         counter = Counter(listBoard)
@@ -163,12 +165,15 @@ class DrawGrid:
                 line += f"{item}".center(3, " ") + '|'
             print(line)
         print()
-        
+    
+    #REQUISITO: INDICA DE QUEM É O TURNO    
     def insertToken(self, board, playerTurn, y, x):
         tokenImage = self.whitetoken if playerTurn == 1 else self.blacktoken
         self.tokens[(y, x)] = Token(playerTurn, y, x, tokenImage, self.GAME)
         board[y][x] = self.tokens[(y, x)].player
-        
+    
+    
+    #REQUISITO: ENCONTRA MOVIMENTOS VALIDOS PARA O JOGADOR ATUAL    
     def findPlayableMoves(self, board, gameTurn):
         validCells = self.findValidCells(board, gameTurn)
         playableCells = []
@@ -208,6 +213,7 @@ class DrawGrid:
                     validCellToClick.append((gridX, gridY))    
         return validCellToClick
     
+    #depois de encontra a cell válida para jogar, inverte todas as cell que serao do novo jogador
     def fetchSwappableTiles(self, x, y, board, player):
         
         surroundCells = validMoves(x, y)

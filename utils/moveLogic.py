@@ -5,44 +5,43 @@ import pygame as p
 
 def validMoves(x, y, minX = 0, minY=0, maxX=7, maxY=7):
     """
-    Calculate valid moves for a piece on a board.
+    Argumentos:
 
-    Args:
-        x (int): Current x-coordinate of the piece.
-        y (int): Current y-coordinate of the piece.
-        minX (int): Minimum x boundary.
-        minY (int): Minimum y boundary.
-        maxX (int): Maximum x boundary.
-        maxY (int): Maximum y boundary.
-
-    Returns:
-        list: A list of tuples representing valid move coordinates.
+      x (int): Coordenada x atual da peça.
+      y (int): Coordenada y atual da peça.
+      minX (int): Limite mínimo para a coordenada x.
+      minY (int): Limite mínimo para a coordenada y.
+      maxX (int): Limite máximo para a coordenada x.
+      maxY (int): Limite máximo para a coordenada y.
+    Retorna:
+      list: Uma lista de tuplas representando as coordenadas dos movimentos válidos
     """
     
     moves = []
-    
+    #VERTICAL
     if x > minX:
-        moves.append((x - 1, y))
+        moves.append((x - 1, y))  # CIMA
         if y > minY:
-            moves.append((x -1, y - 1))
+            moves.append((x -1, y - 1))  # CIMA-ESQUERDA
         if y < maxY:
-            moves.append((x - 1, y + 1))
+            moves.append((x - 1, y + 1))  #CIMA-DIREITA
     
     if x < maxX:
-        moves.append(( x + 1, y))
+        moves.append(( x + 1, y)) #BAIXO
         
         if y > minY:
-            moves.append((x + 1, y - 1))
+            moves.append((x + 1, y - 1)) #BAIXO-ESQUERDA 
         if y < maxY:
-            moves.append((x + 1, y + 1))
-            
+            moves.append((x + 1, y + 1)) #BAIXO-DIREITA
+    #HORIZONTAL       
     if y > minY:
-        moves.append((x, y - 1))
+        moves.append((x, y - 1)) # HORIZONTAL- ESQUEDA
         
     if y < maxY:
-        moves.append((x , y + 1 ))
+        moves.append((x , y + 1 )) # HORIZONTAL-DIREITA
         
     return moves 
+
 
 def loadImages(path,size):
     image = p.image.load(path).convert_alpha()

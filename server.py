@@ -233,12 +233,6 @@ class Server:
         thread.start()
         
     def connClient(self, clientColor):
-        '''connect, addr = self.server.accept()
-        print(f"New client connected: {addr} as  {'white' if clientColor == 1 else 'black'}")
-        if clientColor == 1:
-            self.clientWhite = connect
-        else:
-            self.clientBlack = connect'''
             
         # Conecta e define o endereço
         connect, addr = self.server.accept()

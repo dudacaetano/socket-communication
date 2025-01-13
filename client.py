@@ -120,7 +120,8 @@ class Client:
         else:
             self.whitePointsTxt += ' YOU ARE THE WINNER'
             self.blackPointsTxt += ' GAVEUP'
-    
+            
+    #REQUISITO: indica de quem é a vez e a jogada do turno
     def gameMove(self, x, y):
         x, y = (x - 80) // 80, (y - 80) // 80
         if validCells := self.board.findPlayableMoves(self.board.boardLogic, self.gameTurn):
@@ -146,62 +147,6 @@ class Client:
             if handler:
                 handler(event)
     
-    '''def input(self):
-        for event in p.event.get():
-            if event.type == p.QUIT:
-                self.notifyGiveUp()
-                self.RUN = False
-                
-            if event.type == p.TEXTINPUT:
-                if len(self.INPUT_TEXT) < 19:
-                    self.INPUT_TEXT += event.text
-            
-            if event.type == p.KEYDOWN:
-                if event.key == p.K_BACKSPACE:
-                    self.INPUT_TEXT = self.INPUT_TEXT[:-1]
-                    
-                if event.key == p.K_RETURN and self.INPUT_TEXT != '':
-                    self.notifyChatMessage(self.INPUT_TEXT)
-                    self.chatLog.append(["s", self.INPUT_TEXT])
-                    self.INPUT_TEXT = ''
-            
-            if event.type == p.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    x, y = p.mouse.get_pos()
-                    
-                    #TODO-logic window endgame
-                    if self.endGame:
-                        if 800 <= x <= (800+250) and 130 <= y <= (130+30):
-                            self.notifyReset()
-                    else:
-                        if 800 <= x <= (800+250) and 130 <= y <= (130+30):
-                            self.notifyGiveUp()
-                            self.endGame = True 
-                            
-                            if self.playerTurn == 1:
-                                self.blackPointsTxt += ' YOU ARE THE WINNER!!! '
-                                self.whitePointsTxt += ' GAVEUP:( '
-                                
-                            else:
-                                self.whitePointsTxt += ' YOU ARE THE WINNER!!! '
-                                self.blackPointsTxt += ' GAVEUP:( '
-                                
-                        elif self.gameTurn == self.playerTurn:
-                            x, y = (x - 80) // 80 , (y - 80) // 80
-                            
-                            if validCells := self.board.findPlayableMoves(self.board.boardLogic, self.gameTurn):
-                                if(y, x) in validCells:
-                                    self.board.insertToken(self.board.boardLogic, self.gameTurn, y, x)
-                                    swappableTiles = self.board.fetchSwappableTiles(y,x,self.board.boardLogic, self.gameTurn)
-                                    for tile in swappableTiles:
-                                        self.board.animateTransitions(tile, self.gameTurn)
-                                        self.board.boardLogic[tile[0]][tile[1]] *= -1
-                                        
-                                    
-                                    self.notifyAction(x,y)
-                                    self.gameTurn *= -1
-                                    self.executeScore()'''
-        
     
     def update(self, boardLogic, gameTurn):
         self.board.boardLogic = boardLogic 
@@ -227,13 +172,7 @@ class Client:
         drawImagetxt = fontToUse.render(text, True, color)
         self.gameDisplay.blit(drawImagetxt, (x,y))
         
-    def renderBoxChat(self):
-        
-        '''chatWidth = 250
-        chatHeight = 450
-        resizedChatBackground = p.transform.scale(self.chatBackground,(chatWidth, chatHeight))
-        self.gameDisplay.blit(resizedChatBackground, (800, 130))'''
-        
+    def renderBoxChat(self):    
         inputBoxWidth = 830
         inputBoxHeight = 720
         #resizedInputBoxChat = p.transform.scale(self.inputBoxChat,(inputBoxWidth, inputBoxHeight))
@@ -309,20 +248,21 @@ class Client:
         
 
 #<<<<<<<<<<<<<<<<<<< LISTEN FUNCTIONS >>>>>>>>>>>>>>>>>>>>
-        
+#recebendo dados da mensagem 
     def messageListen(self):
         try:
             while True: 
                 # recebe dados em bytes
                 data = self.socket.recv(4096)
                 if data:
-                    print()
-                    print(f"Receive message: {data}")
+                    #print(data)
+                    #print(f"Receive message: {data}")
                     
                     try:
                         #desempacota os dados usando msgpack
                         message = m.unpackb(data)
                         self.handleMessage(message)
+                        print(message)
                     except m.exceptions.ExtraData:
                          print("ERROR decoding the MessagePack message: Extra data encountered")
                     except m.exceptions.UnpackException as e:
@@ -446,17 +386,6 @@ class Client:
         self.whitePointsTxt += f'{resultsGame.get(self.playerTurn, ("",""))[0]}'
         self.blackPointsTxt += f'{resultsGame.get(self.playerTurn,("",""))[1]}'
         
-        
-        '''self.endGame = True
-        
-        if self.playerTurn == -1:
-            self.blackPointsTxt += ' YOU ARE THE WINNER!!! '
-            self.whitePointsTxt +=  ' GAVEUP '
-        
-        else: 
-            self.whitePointsTxt += ' WON'
-            self.blackPointsTxt += ' GAVEUP'
-            '''
             
 #<<<<<<<<<<<<<<<<<< HANDLER FUNCTIONS >>>>>>>>>>>>>>>>>>
         
