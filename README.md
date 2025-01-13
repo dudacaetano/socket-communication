@@ -54,17 +54,17 @@ Enter the server port:55557
 Server Running: ('192.168.x.x', 55557)
 ```
 
-## Start the Clients
+##  Clientes
 
 Para jogar, você precisa iniciar dois clientes. Os clientes podem ser executados em qualquer máquina da rede local. Ao executar o cliente, você precisará inserir o host (endereço IP) do servidor e o número da porta.
 
-### Start the clients:
+### Executando Clientes:
 
 ```bash
 python client.py
 ```
 
-output:
+Retorno:
 
 ```bash
 pygame-ce 2.5.1 (SDL 2.30.6, Python 3.9.6)
